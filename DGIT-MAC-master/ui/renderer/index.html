@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DGit MAC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3d3d3d;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-blue: #007aff;
+            --accent-green: #34c759;
+            --accent-red: #ff3b30;
+            --accent-orange: #ff9500;
+            --border-color: #404040;
+            --hover-bg: #404040;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e5e5e5;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #d0d0d0;
+            --hover-bg: #e5e5e5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* 로딩 화면 */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .splash-logo {
+            font-size: 4rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .splash-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            animation: loadingPulse 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loadingPulse {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* 메인 앱 컨테이너 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .app-container.visible {
+            opacity: 1;
+        }
+
+        /* 타이틀바 */
+        .title-bar {
+            height: 28px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            -webkit-app-region: drag;
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .traffic-light.close { background: #ff5f56; }
+        .traffic-light.minimize { background: #ffbd2e; }
+        .traffic-light.maximize { background: #27ca3f; }
+
+        .traffic-light:hover {
+            transform: scale(1.1);
+        }
+
+        .title-text {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            -webkit-app-region: no-drag;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--hover-bg);
+        }
+
+        /* 메인 화면 */
+        .home-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .home-logo {
+            font-size: 3rem;
+            font-weight: 200;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .home-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .home-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .home-button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .home-button:hover {
+            background: var(--hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .home-button-icon {
+            font-size: 1.2rem;
+        }
+
+        .home-button-text {
+            flex: 1;
+        }
+
+        .home-button-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .home-button-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* 프로젝트 작업 화면 */
+        .workspace {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+
+        .workspace.active {
+            display: flex;
+        }
+
+        .workspace-header {
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+        }
+
+        .project-info h2 {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .project-path {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .workspace-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: var(--hover-bg);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .terminal-panel {
+            height: 200px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            height: 40px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .terminal-tabs {
+            display: flex;
+            gap: 16px;
+        }
+
+        .terminal-tab {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .terminal-tab.active {
+            background: var(--hover-bg);
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+
+        /* 파일 리스트 */
+        .file-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .file-thumbnail {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .file-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .file-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        /* 커밋 히스토리 */
+        .commit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .commit-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .commit-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+        }
+
+        .commit-details {
+            flex: 1;
+        }
+
+        .commit-message {
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .commit-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
+        }
+
+        .commit-thumbnail {
+            width: 60px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056cc;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--hover-bg);
+        }
+
+        /* 토스트 알림 */
+        .toast-container {
+            position: fixed;
+            top: 40px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+            animation: toastSlideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.success { border-left: 4px solid var(--accent-green); }
+        .toast.error { border-left: 4px solid var(--accent-red); }
+        .toast.warning { border-left: 4px solid var(--accent-orange); }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* 브랜치 시각화 */
+        .branch-graph {
+            height: 300px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .branch-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            border: 2px solid var(--bg-primary);
+        }
+
+        .branch-line {
+            position: absolute;
+            height: 2px;
+            background: var(--accent-blue);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .workspace-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .terminal-panel {
+                height: 150px;
+            }
+        }
+
+        /* 숨김 클래스 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- 로딩 화면 -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-logo">DGit</div>
+        <div class="splash-loading">
+            <span>로딩 중</span>
+            <div class="loading-dots">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div class="app-container" id="appContainer">
+        <!-- 타이틀바 -->
+        <div class="title-bar">
+            <div class="traffic-lights">
+                <div class="traffic-light close" onclick="closeApp()"></div>
+                <div class="traffic-light minimize" onclick="minimizeApp()"></div>
+                <div class="traffic-light maximize" onclick="maximizeApp()"></div>
+            </div>
+            <div class="title-text" id="titleText">DGit MAC</div>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+
+        <!-- 홈 화면 -->
+        <div class="home-screen" id="homeScreen">
+            <div class="home-logo">DGit</div>
+            <div class="home-subtitle">디자인 파일 전용 버전 관리 시스템</div>
+            <div class="home-buttons">
+                <div class="home-button" onclick="selectNewProject()">
+                    <div class="home-button-icon">✅</div>
+                    <div class="home-button-text">
+                        <div class="home-button-title">새 프로젝트 선택</div>
+                        <div class="home-button-desc">새로운 디자인 프로젝트를 시작합니다</div>
+                    </div>
+                </div>
+                <div class="home-button" onclick="openCurrentProject()">
+                    <div class="home-button-icon">📂</div>
+                    <div class="home-button-text">
+                        <div class="home-button-title">진행 중인 프로젝트</div>
+                        <div class="home-button-desc">가장 최근 프로젝트를 바로 엽니다</div>
+                    </div>
+                </div>
+                <div class="home-button" onclick="showRecentProjects()">
+                    <div class="home-button-icon">🕘</div>
+                    <div class="home-button-text">
+                        <div class="home-button-title">지난 프로젝트</div>
+                        <div class="home-button-desc">최근 작업한 프로젝트 목록에서 선택</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업 공간 -->
+        <div class="workspace" id="workspace">
+            <!-- 헤더 -->
+            <div class="workspace-header">
+                <button class="btn btn-secondary" onclick="goHome()">← 홈</button>
+                <div class="project-info">
+                    <h2 id="projectName">프로젝트명</h2>
+                    <div class="project-path" id="projectPath">/path/to/project</div>
+                </div>
+            </div>
+
+            <!-- 콘텐츠 영역 -->
+            <div class="workspace-content">
+                <!-- 사이드바 -->
+                <div class="sidebar">
+                    <ul class="sidebar-nav">
+                        <li class="sidebar-item active" onclick="showContent('files')">
+                            <span>📁</span> 파일
+                        </li>
+                        <li class="sidebar-item" onclick="showContent('versions')">
+                            <span>📝</span> 버전
+                        </li>
+                        <li class="sidebar-item" onclick="showContent('branches')">
+                            <span>🌿</span> 브랜치
+                        </li>
+                        <li class="sidebar-item" onclick="showContent('notifications')">
+                            <span>🔔</span> 알림
+                        </li>
+                        <li class="sidebar-item" onclick="showContent('settings')">
+                            <span>⚙️</span> 설정
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 메인 콘텐츠 -->
+                <div class="main-content">
+                    <div class="content-area">
+                        <!-- 파일 목록 -->
+                        <div id="filesContent" class="content-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3>프로젝트 파일</h3>
+                                <button class="btn btn-primary" onclick="commitChanges()">변경사항 커밋</button>
+                            </div>
+                            <div class="file-list" id="fileList">
+                                <!-- 파일 항목들이 여기에 동적으로 추가됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 버전 히스토리 -->
+                        <div id="versionsContent" class="content-section hidden">
+                            <h3 style="margin-bottom: 20px;">커밋 히스토리</h3>
+                            <div class="commit-list" id="commitList">
+                                <!-- 커밋 항목들이 여기에 동적으로 추가됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 브랜치 관리 -->
+                        <div id="branchesContent" class="content-section hidden">
+                            <h3 style="margin-bottom: 20px;">브랜치 관리</h3>
+                            <div class="branch-graph" id="branchGraph"></div>
+                            <button class="btn btn-primary" onclick="createBranch()">새 브랜치 생성</button>
+                        </div>
+
+                        <!-- 알림 -->
+                        <div id="notificationsContent" class="content-section hidden">
+                            <h3 style="margin-bottom: 20px;">알림 설정</h3>
+                            <p>알림 관련 설정들이 여기에 표시됩니다.</p>
+                        </div>
+
+                        <!-- 설정 -->
+                        <div id="settingsContent" class="content-section hidden">
+                            <h3 style="margin-bottom: 20px;">환경설정</h3>
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="margin-bottom: 10px;">정보</h4>
+                                <p style="color: var(--text-secondary); margin-bottom: 8px;">버전: 1.0.0</p>
+                                <p style="color: var(--text-secondary); margin-bottom: 8px;">제작: 3pxTeam</p>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 10px;">테마</h4>
+                                <button class="btn btn-secondary" onclick="toggleTheme()">
+                                    <span id="themeText">라이트 모드로 전환</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 터미널 패널 -->
+                    <div class="terminal-panel">
+                        <div class="terminal-header">
+                            <div class="terminal-tabs">
+                                <div class="terminal-tab active" onclick="showTerminalTab('log')">커밋 로그</div>
+                                <div class="terminal-tab" onclick="showTerminalTab('status')">상태</div>
+                            </div>
+                        </div>
+                        <div class="terminal-content" id="terminalContent">
+                            <div id="terminalLog">커밋 로그가 여기에 표시됩니다...</div>
+                            <div id="terminalStatus" class="hidden">상태 정보가 여기에 표시됩니다...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달들 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">모달 제목</div>
+                <div class="modal-subtitle" id="modalSubtitle">모달 부제목</div>
+            </div>
+            <div class="modal-body" id="modalBody">
+                모달 내용
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 컨테이너 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // 전역 변수
+        let currentProject = null;
+        let currentTheme = 'dark';
+        let activeContent = 'files';
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 로딩 화면 표시 후 메인 앱으로 전환
+            setTimeout(() => {
+                document.getElementById('splashScreen').style.display = 'none';
+                document.getElementById('appContainer').classList.add('visible');
+                loadSampleData();
+            }, 2000);
+        });
+
+        // 샘플 데이터 로드
+        function loadSampleData() {
+            const sampleFiles = [
+                { name: 'design-v1.psd', type: 'psd', size: '25.4 MB', modified: '2시간 전', status: 'modified' },
+                { name: 'logo-concept.ai', type: 'ai', size: '3.2 MB', modified: '1일 전', status: 'staged' },
+                { name: 'wireframe.sketch', type: 'sketch', size: '12.8 MB', modified: '3일 전', status: 'committed' },
+                { name: 'prototype.fig', type: 'figma', size: '8.9 MB', modified: '1주 전', status: 'committed' }
+            ];
+
+            const sampleCommits = [
+                { 
+                    message: '메인 디자인 레이아웃 완성',
+                    author: 'Designer',
+                    date: '2시간 전',
+                    hash: 'a1b2c3d',
+                    files: 3
+                },
+                {
+                    message: '로고 디자인 초안 추가',
+                    author: 'Designer', 
+                    date: '1일 전',
+                    hash: 'e4f5g6h',
+                    files: 1
+                },
+                {
+                    message: '와이어프레임 구조 개선',
+                    author: 'Designer',
+                    date: '3일 전', 
+                    hash: 'i7j8k9l',
+                    files: 2
+                }
+            ];
+
+            renderFiles(sampleFiles);
+            renderCommits(sampleCommits);
+        }
+
+        // 파일 목록 렌더링
+        function renderFiles(files) {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = files.map(file => `
+                <div class="file-item" onclick="previewFile('${file.name}')">
+                    <div class="file-thumbnail">${getFileIcon(file.type)}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-details">${file.size} • ${file.modified}</div>
+                    </div>
+                    <div class="file-status" style="background: ${getStatusColor(file.status)}"></div>
+                </div>
+            `).join('');
+        }
+
+        // 커밋 목록 렌더링
+        function renderCommits(commits) {
+            const commitList = document.getElementById('commitList');
+            commitList.innerHTML = commits.map(commit => `
+                <div class="commit-item" onclick="viewCommit('${commit.hash}')">
+                    <div class="commit-avatar">${commit.author[0]}</div>
+                    <div class="commit-details">
+                        <div class="commit-message">${commit.message}</div>
+                        <div class="commit-meta">
+                            <span>${commit.date}</span>
+                            <span>${commit.hash}</span>
+                            <span>${commit.files}개 파일</span>
+                        </div>
+                    </div>
+                    <div class="commit-thumbnail"></div>
+                </div>
+            `).join('');
+        }
+
+        // 파일 아이콘 가져오기
+        function getFileIcon(type) {
+            const icons = {
+                'psd': '🎨',
+                'ai': '🖌️',
+                'sketch': '✏️',
+                'figma': '🎯',
+                'xd': '💜',
+                'png': '🖼️',
+                'jpg': '📸',
+                'svg': '🎭'
+            };
+            return icons[type] || '📄';
+        }
+
+        // 파일 상태 색상 가져오기
+        function getStatusColor(status) {
+            const colors = {
+                'modified': 'var(--accent-orange)',
+                'staged': 'var(--accent-blue)',
+                'committed': 'var(--accent-green)'
+            };
+            return colors[status] || 'var(--text-secondary)';
+        }
+
+        // 테마 토글
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (currentTheme === 'light') {
+                themeIcon.textContent = '🌞';
+                if (themeText) themeText.textContent = '다크 모드로 전환';
+            } else {
+                themeIcon.textContent = '🌙';
+                if (themeText) themeText.textContent = '라이트 모드로 전환';
+            }
+            
+            showToast('테마가 변경되었습니다', 'success');
+        }
+
+        // 트래픽 라이트 버튼 함수들
+        function closeApp() {
+            if (window.electron) {
+                window.electron.closeApp();
+            } else {
+                window.close();
+            }
+        }
+
+        function minimizeApp() {
+            if (window.electron) {
+                window.electron.minimizeApp();
+            }
+        }
+
+        function maximizeApp() {
+            if (window.electron) {
+                window.electron.maximizeApp();
+            }
+        }
+
+        // 홈 화면 버튼 함수들
+        function selectNewProject() {
+            showModal('새 프로젝트 선택', '새로운 프로젝트 폴더를 선택해주세요', `
+                <div style="padding: 20px; text-align: center;">
+                    <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                        프로젝트 폴더를 선택하면 DGit 저장소가 자동으로 초기화됩니다.
+                    </p>
+                    <button class="btn btn-primary" onclick="mockSelectFolder()">폴더 선택</button>
+                </div>
+            `);
+        }
+
+        function openCurrentProject() {
+            if (currentProject) {
+                openProject(currentProject);
+            } else {
+                showToast('진행 중인 프로젝트가 없습니다', 'warning');
+            }
+        }
+
+        function showRecentProjects() {
+            const recentProjects = [
+                { name: 'UI Kit Design', path: '/Users/designer/Projects/ui-kit', lastModified: '2시간 전' },
+                { name: 'Brand Identity', path: '/Users/designer/Projects/brand', lastModified: '1일 전' },
+                { name: 'Mobile App Design', path: '/Users/designer/Projects/mobile', lastModified: '3일 전' },
+                { name: 'Website Redesign', path: '/Users/designer/Projects/website', lastModified: '1주 전' }
+            ];
+
+            const projectList = recentProjects.map(project => `
+                <div class="file-item" onclick="openRecentProject('${project.path}', '${project.name}')">
+                    <div class="file-thumbnail">📁</div>
+                    <div class="file-info">
+                        <div class="file-name">${project.name}</div>
+                        <div class="file-details">${project.path} • ${project.lastModified}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            showModal('지난 프로젝트', '최근 작업한 프로젝트를 선택하세요', `
+                <div class="file-list">
+                    ${projectList}
+                </div>
+            `);
+        }
+
+        // 프로젝트 열기
+        function openProject(projectInfo) {
+            currentProject = projectInfo;
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('workspace').classList.add('active');
+            document.getElementById('titleText').textContent = `DGit MAC - ${projectInfo.name}`;
+            document.getElementById('projectName').textContent = projectInfo.name;
+            document.getElementById('projectPath').textContent = projectInfo.path;
+            
+            showToast(`프로젝트 '${projectInfo.name}'을 열었습니다`, 'success');
+        }
+
+        function openRecentProject(path, name) {
+            closeModal();
+            openProject({ name, path });
+        }
+
+        function mockSelectFolder() {
+            closeModal();
+            const projectInfo = {
+                name: 'New Design Project',
+                path: '/Users/designer/Projects/new-project'
+            };
+            openProject(projectInfo);
+        }
+
+        // 홈으로 돌아가기
+        function goHome() {
+            document.getElementById('workspace').classList.remove('active');
+            document.getElementById('homeScreen').style.display = 'flex';
+            document.getElementById('titleText').textContent = 'DGit MAC';
+            currentProject = null;
+        }
+
+        // 사이드바 콘텐츠 표시
+        function showContent(contentType) {
+            // 모든 콘텐츠 섹션 숨기기
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 사이드바 활성화 상태 변경
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 선택된 콘텐츠 표시
+            document.getElementById(`${contentType}Content`).classList.remove('hidden');
+            event.target.classList.add('active');
+            activeContent = contentType;
+        }
+
+        // 터미널 탭 전환
+        function showTerminalTab(tabType) {
+            document.querySelectorAll('.terminal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            
+            if (tabType === 'log') {
+                document.getElementById('terminalLog').classList.remove('hidden');
+                document.getElementById('terminalStatus').classList.add('hidden');
+            } else {
+                document.getElementById('terminalLog').classList.add('hidden');
+                document.getElementById('terminalStatus').classList.remove('hidden');
+            }
+        }
+
+        // 파일 미리보기
+        function previewFile(filename) {
+            showModal('파일 미리보기', filename, `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="width: 200px; height: 150px; background: var(--bg-tertiary); border-radius: 8px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                        ${getFileIcon(filename.split('.').pop())}
+                    </div>
+                    <p style="color: var(--text-secondary);">
+                        ${filename}의 미리보기입니다.<br>
+                        실제 구현에서는 이미지 썸네일이 표시됩니다.
+                    </p>
+                </div>
+            `);
+        }
+
+        // 커밋 상세보기
+        function viewCommit(hash) {
+            showModal('커밋 상세정보', `커밋 ${hash}`, `
+                <div style="padding: 20px;">
+                    <h4 style="margin-bottom: 16px;">변경된 파일:</h4>
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-thumbnail">🎨</div>
+                            <div class="file-info">
+                                <div class="file-name">design-v1.psd</div>
+                                <div class="file-details">+127 -23 라인</div>
+                            </div>
+                        </div>
+                    </div>
+                    <h4 style="margin: 20px 0 16px 0;">커밋 메시지:</h4>
+                    <p style="color: var(--text-secondary); background: var(--bg-tertiary); padding: 12px; border-radius: 6px;">
+                        메인 디자인 레이아웃을 완성했습니다. 새로운 컬러 스킴을 적용하고 타이포그래피를 개선했습니다.
+                    </p>
+                </div>
+            `);
+        }
+
+        // 변경사항 커밋
+        function commitChanges() {
+            showModal('변경사항 커밋', '커밋 메시지를 입력하세요', `
+                <div>
+                    <textarea 
+                        id="commitMessage" 
+                        placeholder="커밋 메시지를 입력하세요..."
+                        style="
+                            width: 100%;
+                            height: 100px;
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            border-radius: 6px;
+                            padding: 12px;
+                            color: var(--text-primary);
+                            resize: vertical;
+                            font-family: inherit;
+                        "
+                    ></textarea>
+                    <div style="margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem;">
+                        변경된 파일: 2개 • 추가: 1개 • 수정: 1개
+                    </div>
+                </div>
+            `, () => {
+                const message = document.getElementById('commitMessage').value;
+                if (message.trim()) {
+                    performCommit(message);
+                } else {
+                    showToast('커밋 메시지를 입력해주세요', 'warning');
+                }
+            });
+        }
+
+        function performCommit(message) {
+            closeModal();
+            showToast('변경사항을 커밋하는 중...', 'success');
+            
+            // 터미널에 로그 추가
+            const terminalLog = document.getElementById('terminalLog');
+            terminalLog.innerHTML += `
+                <div style="margin-bottom: 8px;">
+                    <span style="color: var(--accent-green);">✓</span> 
+                    <span style="color: var(--text-secondary);">[${new Date().toLocaleTimeString()}]</span>
+                    커밋 완료: ${message}
+                </div>
+            `;
+            terminalLog.scrollTop = terminalLog.scrollHeight;
+            
+            setTimeout(() => {
+                showToast('커밋이 완료되었습니다 ✅', 'success');
+            }, 1000);
+        }
+
+        // 브랜치 생성
+        function createBranch() {
+            showModal('새 브랜치 생성', '브랜치 이름을 입력하세요', `
+                <div>
+                    <input 
+                        type="text" 
+                        id="branchName" 
+                        placeholder="feature/new-design"
+                        style="
+                            width: 100%;
+                            padding: 12px;
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            border-radius: 6px;
+                            color: var(--text-primary);
+                            font-family: inherit;
+                        "
+                    />
+                    <div style="margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem;">
+                        현재 브랜치: main에서 분기됩니다
+                    </div>
+                </div>
+            `, () => {
+                const branchName = document.getElementById('branchName').value;
+                if (branchName.trim()) {
+                    createNewBranch(branchName);
+                } else {
+                    showToast('브랜치 이름을 입력해주세요', 'warning');
+                }
+            });
+        }
+
+        function createNewBranch(name) {
+            closeModal();
+            showToast(`브랜치 '${name}'를 생성했습니다`, 'success');
+            
+            // 브랜치 그래프 업데이트 (간단한 시각화)
+            const branchGraph = document.getElementById('branchGraph');
+            const newNode = document.createElement('div');
+            newNode.className = 'branch-node';
+            newNode.style.left = Math.random() * 200 + 'px';
+            newNode.style.top = Math.random() * 100 + 50 + 'px';
+            newNode.title = name;
+            branchGraph.appendChild(newNode);
+        }
+
+        // 모달 관련 함수들
+        function showModal(title, subtitle, body, confirmCallback = null) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalSubtitle').textContent = subtitle;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('modalOverlay').classList.add('show');
+            
+            // 확인 버튼 콜백 설정
+            window.currentModalCallback = confirmCallback;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            window.currentModalCallback = null;
+        }
+
+        function confirmModal() {
+            if (window.currentModalCallback) {
+                window.currentModalCallback();
+            } else {
+                closeModal();
+            }
+        }
+
+        // 토스트 알림
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+            toast.innerHTML = `
+                <span>${icon}</span>
+                <span>${message}</span>
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            // 3초 후 자동 제거
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (e.metaKey || e.ctrlKey) {
+                switch(e.key) {
+                    case 'o':
+                        e.preventDefault();
+                        if (document.getElementById('homeScreen').style.display !== 'none') {
+                            selectNewProject();
+                        }
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        if (currentProject) {
+                            commitChanges();
+                        }
+                        break;
+                    case 'w':
+                        e.preventDefault();
+                        goHome();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        showToast('상태를 새로고침했습니다', 'success');
+                        break;
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                if (document.getElementById('modalOverlay').classList.contains('show')) {
+                    closeModal();
+                } else if (currentProject) {
+                    goHome();
+                }
+            }
+        });
+
+        // 모달 오버레이 클릭시 닫기
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
